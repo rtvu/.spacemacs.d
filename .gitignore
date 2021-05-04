@@ -1,3 +1,5 @@
 # Environment variables are automatically generated.
 /.spacemacs.env
 
+# Custom variables should not be used.
+/custom.el

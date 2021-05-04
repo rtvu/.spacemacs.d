@@ -38,23 +38,65 @@ This function should only modify configuration layer settings."
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     ;; auto-completion
-     ;; better-defaults
-     emacs-lisp
-     ;; git
+
+     ;;;;; Checkers ;;;;;
+     (spell-checking :variables
+                     spell-checking-enable-by-default nil
+                     enable-flyspell-auto-completion t)
+     syntax-checking
+
+     ;;;;; Completion ;;;;;
+     (auto-completion :variables
+                      auto-completion-return-key-behavior nil
+                      auto-completion-tab-key-behavior 'complete
+                      auto-completion-minimum-prefix-length 1
+                      auto-completion-idle-delay 0.0
+                      auto-completion-enable-help-tooltip t
+                      auto-completion-use-company-box t)
      helm
-     ;; lsp
-     ;; markdown
+
+     ;;;;; Emacs ;;;;;
+     helpful
+     (org :variables
+          org-enable-reveal-js-support t
+          org-want-todo-bindings t)
+     semantic
+
+     ;;;;; File Tree ;;;;;
+     (treemacs :variables
+               treemacs-use-git-mode 'deferred
+               treemacs-use-all-the-icons-theme t)
+
+     ;;;;; Fun ;;;;;
+     xkcd
+
+     ;;;;; Misc ;;;;;
      multiple-cursors
-     ;; org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
-     ;; spell-checking
-     ;; syntax-checking
-     ;; version-control
-     treemacs
-     themes-megapack)
+
+     ;;;;; Lang ;;;;;
+     emacs-lisp
+
+     ;;;;; Source-control ;;;;;
+     git
+     (version-control :variables
+                      version-control-diff-tool 'git-gutter
+                      version-control-diff-side 'left
+                      version-control-global-margin t)
+
+     ;;;;; Themes ;;;;;
+     themes-megapack
+
+     ;;;;; Tools ;;;;;
+     lsp
+     rebox
+     (shell :variables
+            shell-default-shell 'eshell
+            shell-default-height 30
+            shell-default-position 'bottom)
+
+     ;;;;; Vim ;;;;;
+     evil-commentary
+      )
 
 
    ;; List of additional packages that will be installed without being wrapped
@@ -65,13 +107,13 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(highlight-indent-guides)
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages '()
+   dotspacemacs-excluded-packages '(indent-guide)
 
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.

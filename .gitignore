@@ -3,3 +3,7 @@
 
 # Custom variables should not be used.
 /custom.el
+
+# Tangled files
+/user-init.el
+/user-config.el

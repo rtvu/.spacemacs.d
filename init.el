@@ -40,9 +40,6 @@ This function should only modify configuration layer settings."
      ;; ----------------------------------------------------------------
 
      ;;;;; Checkers ;;;;;
-     (spell-checking :variables
-                     spell-checking-enable-by-default nil
-                     enable-flyspell-auto-completion t)
      syntax-checking
 
      ;;;;; Completion ;;;;;
@@ -60,7 +57,6 @@ This function should only modify configuration layer settings."
      (org :variables
           org-enable-reveal-js-support t
           org-want-todo-bindings t)
-     semantic
 
      ;;;;; File Tree ;;;;;
      (treemacs :variables
@@ -75,6 +71,7 @@ This function should only modify configuration layer settings."
 
      ;;;;; Lang ;;;;;
      emacs-lisp
+     javascript
 
      ;;;;; Source-control ;;;;;
      git

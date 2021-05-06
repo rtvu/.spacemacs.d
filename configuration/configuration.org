@@ -1,0 +1,155 @@
+#+title: Spacemacs Configuration
+#+property: header-args:emacs-lisp :tangle user-config.el
+
+* Configure User
+
+Set username and email address.
+
+#+begin_src emacs-lisp :tangle user-init.el
+(setq user-full-name "Ryan Vu"
+      user-mail-address "rtvu87@gmail.com")
+#+end_src
+
+* Configure editor
+
+Define function and keybinding to open user configuration.
+
+#+begin_src emacs-lisp
+(defun user/browse-configuration-directory ()
+  "Opens directory for user configuration."
+  (interactive)
+  (let ((default-directory (concat dotspacemacs-directory "configuration/")))
+    (call-interactively
+     (cond ((fboundp #'counsel-find-file)
+            #'counsel-find-file)
+           ((fboundp #'helm-find-files)
+            #'helm-find-files)
+           (#'find-file)))))
+
+(spacemacs/declare-prefix "feo" "Open user configuration")
+(spacemacs/set-leader-keys "feo" #'user/browse-configuration-directory)
+#+end_src
+
+Follow symbolic links of version controlled file.
+
+#+begin_src emacs-lisp
+(setq vc-follow-symlinks t)
+#+end_src
+
+Configure undo-tree for region.
+
+#+begin_src emacs-lisp
+(setq undo-tree-enable-undo-in-region t)
+#+end_src
+
+Disable display of minor modes in modeline.
+
+#+begin_src emacs-lisp
+(spaceline-toggle-minor-modes-off)
+#+end_src
+
+Enable delete in active region.
+
+#+begin_src emacs-lisp
+(delete-selection-mode 1)
+#+end_src
+
+Customize fill column indicator.
+
+#+begin_src emacs-lisp
+(setq display-fill-column-indicator-character ?\¦
+      display-fill-column-indicator-column 100)
+#+end_src
+
+* Configure =highlight-indent-guides=
+
+Configure package and define keybinding.
+
+#+begin_src emacs-lisp
+(use-package highlight-indent-guides
+  :init
+  (setq highlight-indent-guides-method 'character
+        highlight-indent-guides-character ?\¦))
+
+(spacemacs/declare-prefix "ti" "indent guides")
+(spacemacs/set-leader-keys "ti" 'highlight-indent-guides-mode)
+#+end_src
+
+* Configure =hl-todo=
+
+Define keywords and keybinding.
+
+#+begin_src emacs-lisp
+(setq hl-todo-highlight-punctuation ":"
+      hl-todo-keyword-faces
+      `(;; For things that need to be done, just not today.
+        ("TODO" warning bold)
+        ;; For problems that will become bigger problems later if not
+        ;; fixed ASAP.
+        ("FIXME" error bold)
+        ;; For tidbits that are unconventional and not intended uses of the
+        ;; constituent parts, and may break in a future update.
+        ("HACK" font-lock-constant-face bold)
+        ;; For things that were done hastily and/or hasn't been thoroughly
+        ;; tested. It may not even be necessary!
+        ("REVIEW" font-lock-keyword-face bold)
+        ;; For especially important gotchas with a given implementation,
+        ;; directed at another user other than the author.
+        ("NOTE" success bold)
+        ;; For things that just gotta go and will soon be gone.
+        ("DEPRECATED" font-lock-doc-face bold)
+        ;; For a known bug that needs a workaround
+        ("BUG" error bold)
+        ;; For warning about a problematic or misguiding code
+        ("XXX" font-lock-constant-face bold)))
+
+(spacemacs/declare-prefix "oh" "hl-todo keywords")
+(spacemacs/set-leader-keys "oh" 'hl-todo-insert)
+#+end_src
+
+* Configure =git=
+
+Customize fringe. Code taken from Doom Emacs.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'git-gutter-fringe
+  ;; Standardize default fringe width.
+  (if (fboundp 'fringe-mode)
+      (fringe-mode '4))
+  ;; Places the git gutter outside the margins.
+  (setq-default fringes-outside-margins t)
+  ;; Thin fringe bitmaps.
+  (define-fringe-bitmap 'git-gutter-fr:added [224]
+    nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:modified [224]
+    nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240]
+    nil nil 'bottom))
+#+end_src
+
+* Configure =flycheck=
+
+Customize fringe. Code taken from Doom Emacs.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'flycheck
+  ;; Let diff have left fringe, flycheck can have right fringe.
+  (setq flycheck-indication-mode 'right-fringe)
+  ;; A non-descript, left-pointing arrow.
+  (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
+    [16 48 112 240 112 48 16] nil nil 'center))
+#+end_src
+
+* Configure =evil=
+
+Enable tracking undos in insert mode.
+
+#+begin_src emacs-lisp :tangle user-init.el
+(setq evil-want-fine-undo t)
+#+end_src
+
+* Configure =org=
+
+[[file:org.org::*Configure =org=][Link]]
+
+#+include: "org.org::*Configure =org=" :lines "2-"

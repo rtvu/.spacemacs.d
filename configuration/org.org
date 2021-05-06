@@ -1,0 +1,240 @@
+#+title: Org
+
+[[file:configuration.org::*Configure =org=][Backlink]]
+
+* Configure =org=
+
+** Configure =user/log=
+
+Set user log variables
+
+#+begin_src emacs-lisp
+(setq user/log-directory "~/org/logs/"
+      user/log-topics '("ryan" "hp"))
+#+end_src
+
+Define user logging behavior.
+
+#+begin_src emacs-lisp
+(defun user/current-log-by-topic (topic)
+  "Opens log with current date from TOPIC folder."
+  (interactive "sTopic: ")
+  (let ((file-name (concat user/log-directory
+                           topic
+                           (format-time-string "/%Y/%m/%Y-%m-%d")
+                           "--"
+                           topic
+                           ".org")))
+    (find-file file-name)
+    (unless (file-exists-p file-name)
+      (insert (format-time-string "* %A, %B %e, %Y\n")))))
+
+(defun user/log-topic-from-file-name (file-name)
+  "Returns log topic from FILE-NAME if exists else nil"
+  (let* ((expanded-file-name (expand-file-name file-name))
+        (topic (progn (string-match (concat (expand-file-name user/log-directory) "\\([^/]+\\)/") expanded-file-name)
+                      (match-string 1 expanded-file-name)))
+        (member-p (member topic user/log-topics)))
+    (if member-p
+        topic)))
+
+(defun user/next-log-by-command (command)
+  "Opens earlier/later log based on COMMAND."
+  (let ((topic (user/log-topic-from-file-name buffer-file-name)))
+    (if topic
+        (let* ((path (concat (expand-file-name user/log-directory) topic "/"))
+              (file-list (sort (directory-files-recursively path ".") 'string<))
+              (index (cl-position buffer-file-name file-list :test 'equal)))
+          (if index
+              (let* ((size (length file-list))
+                    (next-index (cond ((string= command "earlier") (- index 1))
+                                      ((string= command "later") (+ index 1))
+                                      (t -1))))
+                (cond ((< next-index 0) (message "%s" "No earlier logs."))
+                      ((>= next-index size) (message "%s" "No later logs."))
+                      (t (progn (kill-buffer)
+                                (find-file (nth next-index file-list))))))))
+      (message "%s" "File not in a tracked log directory."))))
+#+end_src
+
+Set keybindings.
+
+#+begin_src emacs-lisp
+(spacemacs/declare-prefix "or" "current log")
+(spacemacs/set-leader-keys "or" (defun user/current-log () (interactive) (user/current-log-by-topic "ryan")))
+
+(spacemacs/declare-prefix "ow" "current work log")
+(spacemacs/set-leader-keys "ow" (defun user/current-work-log () (interactive) (user/current-log-by-topic "hp")))
+
+(spacemacs/declare-prefix "oe" "earlier log")
+(spacemacs/set-leader-keys "oe" (defun user/earlier-log () (interactive) (user/next-log-by-command "earlier")))
+
+(spacemacs/declare-prefix "ol" "later log")
+(spacemacs/set-leader-keys "ol" (defun user/later-log () (interactive) (user/next-log-by-command "later")))
+
+(spacemacs/declare-prefix "ou" "update org-agenda-files")
+(spacemacs/set-leader-keys "ou" (defun user/update-agenda-files () (interactive) (setq org-agenda-files (directory-files-recursively "~/org" ".org$"))))
+#+end_src
+
+** Configure =org= defaults
+
+Set =org= variables.
+
+#+begin_src emacs-lisp :tangle user-config.el
+(with-eval-after-load 'org
+  (setq org-src-preserve-indentation t
+        org-ellipsis " ▼ "
+        org-agenda-files (directory-files-recursively "~/org" ".org$")
+        org-startup-folded nil
+        org-startup-indented t
+        org-startup-with-inline-images nil
+        org-log-done nil
+        org-pretty-entities t
+        org-src-preserve-indentation t
+        org-log-into-drawer t
+        org-todo-keywords '((sequence "TODO(t)" "FOLLOW-UP(f)" "|" "DONE(d)")
+                            (sequence "NEW(n!)" "PLANNING(p!)" "IN-PROGRESS(i@)" "WAITING(w@)" "|" "COMPLETED(c@)" "CANCELED(C@)" "SUSPENDED(s@)")
+                            (sequence "QUESTION(q!)" "|" "ANSWER(a@)")
+                            (sequence "NEED(N!)" "REQUEST(r!)" "|" "RESPONSE(R@)"))
+        org-latex-listings 'minted
+        org-latex-minted-options '(("fontsize" "\\scriptsize") ("linenos" ""))
+        org-latex-pdf-process
+          '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  (add-to-list 'org-latex-packages-alist '("" "minted")))
+#+end_src
+
+** Configure =user/link-file=
+
+Define small functions for setting and clearing the file location store.
+
+#+begin_src emacs-lisp
+(defvar user/file-location-store nil
+  "Stores a file location.")
+
+(defun user/clear-file-location ()
+  "Sets `user/file-location-store' to nil."
+  (interactive)
+  (setq user/file-location-store nil))
+
+(defun user/store-file-location ()
+  "Sets `user/file-location-store' to the file location of the current buffer."
+  (interactive)
+  (setq user/file-location-store
+        (abbreviate-file-name buffer-file-name)))
+#+end_src
+
+Define functions to simplify making links and backlinks.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  (defun user/org-insert-link (&optional link-location description)
+    "Inserts a link.
+  If LINK-LOCATION is nil, then complete at prompt.
+
+  If DESCRIPTION is 'link-location, then use link location.
+  If DESCRIPTION is 'none, then provide no description.
+  If DESCRIPTION is not a string, then complete at prompt."
+    (interactive)
+    (unless link-location
+      (setq link-location (abbreviate-file-name (read-file-name "File: "))))
+    (cond ((eq description 'link-location)
+          (setq description link-location))
+          ((eq description 'none)
+          (setq description nil))
+          ((not (stringp description))
+          (setq description (completing-read "Description: " `(,link-location)))
+          (print "testing")))
+    (insert (org-link-make-string (concat "file:" link-location) description)))
+
+  (defun user/org-insert-link-store (&optional arg)
+    "Inserts a link interacting with a file location store.
+  If `user/file-location-store' is nil, then prompt user for the target file
+  location. Set `user/file-location-store' to current buffer's file location.
+
+  If `user/file-location-store' is non-nil, then use value for target file
+  location. Clear `user/file-location-store' unless `\\[universal-argument]'
+  prefix is provided."
+    (interactive)
+    (user/org-insert-link user/file-location-store nil)
+    (if user/file-location-store
+        (unless (eq arg '(4))
+          (user/clear-file-location))
+      (user/store-file-location))))
+#+end_src
+
+Set keybindings.
+
+#+begin_src emacs-lisp
+(spacemacs/declare-prefix "ofc" "clear location")
+(spacemacs/set-leader-keys "ofc" #'user/clear-file-location)
+
+(spacemacs/declare-prefix "ofs" "store location")
+(spacemacs/set-leader-keys "ofs" #'user/store-file-location)
+
+(spacemacs/declare-prefix "ofl" "insert link")
+(spacemacs/set-leader-keys "ofl" #'user/org-insert-link)
+
+(spacemacs/declare-prefix "ofi" "insert link store")
+(spacemacs/set-leader-keys "ofi" #'user/org-insert-link-store)
+#+end_src
+
+** Configure Tab Behavior
+
+Add hooks. Code taken from Doom Emacs.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  (defun hacks/org-yas-expand-maybe-h ()
+    "Expand a yasnippet snippet, if trigger exists at point or region is active. Made for `org-tab-first-hook'."
+    (when (bound-and-true-p yas-minor-mode)
+      (and (let ((major-mode (if (org-in-src-block-p t)
+                                  (org-src-get-lang-mode (org-eldoc-get-src-lang))
+                                major-mode))
+                  (org-src-tab-acts-natively nil) ; causes breakages
+                  ;; Smart indentation doesn't work with yasnippet, and painfully slow
+                  ;; in the few cases where it does.
+                  (yas-indent-line 'fixed))
+              (cond ((and (or (not (bound-and-true-p evil-local-mode))
+                              (evil-insert-state-p))
+                          (yas--templates-for-key-at-point))
+                    (yas-expand)
+                    t)
+                    ((use-region-p)
+                    (yas-insert-snippet)
+                    t)))
+            ;; HACK Yasnippet breaks org-superstar-mode because yasnippets is
+            ;;      overzealous about cleaning up overlays.
+            (when (bound-and-true-p org-superstar-mode)
+              (org-superstar-restart)))))
+
+  (defun hacks/org-indent-maybe-h ()
+    "Indent the current item (header or item), if possible. Made for `org-tab-first-hook' in evil-mode."
+    (interactive)
+    (cond ((not (and (bound-and-true-p evil-local-mode)
+                      (evil-insert-state-p)))
+            nil)
+          ((org-at-item-p)
+            (if (eq this-command 'org-shifttab)
+                (org-outdent-item-tree)
+              (org-indent-item-tree))
+            t)
+          ((org-at-heading-p)
+            (ignore-errors (if (eq this-command 'org-shifttab)
+                              (org-promote)
+                            (org-demote)))
+            t)
+          ((org-in-src-block-p t)
+            (org-babel-do-in-edit-buffer (call-interactively #'indent-for-tab-command))
+            t)
+          ((and (save-excursion
+                  (skip-chars-backward " \t")
+                  (bolp))
+                (org-in-subtree-not-table-p))
+            (call-interactively #'tab-to-tab-stop)
+            t)))
+
+  (add-hook 'org-tab-first-hook #'hacks/org-yas-expand-maybe-h)
+  (add-hook 'org-tab-first-hook #'hacks/org-indent-maybe-h))
+#+end_src

@@ -4,6 +4,24 @@
 
 * Configure =org=
 
+** Configure =org-agenda-files=
+
+Allow updating org-agenda-files during Emacs session.
+
+#+begin_src emacs-lisp
+(defun user/update-agenda-files ()
+  "Update list of org files for `org-agenda-files'"
+  (interactive)
+  (setq org-agenda-files (directory-files-recursively "~/org" ".org$")))
+#+end_src
+
+Set keybinding.
+
+#+begin_src emacs-lisp
+(spacemacs/declare-prefix "ou" "update org-agenda-files")
+(spacemacs/set-leader-keys "ou" #'user/update-agenda-files)
+#+end_src
+
 ** Configure =user/log=
 
 Set user log variables
@@ -60,20 +78,19 @@ Define user logging behavior.
 Set keybindings.
 
 #+begin_src emacs-lisp
-(spacemacs/declare-prefix "or" "current log")
-(spacemacs/set-leader-keys "or" (defun user/current-log () (interactive) (user/current-log-by-topic "ryan")))
+(spacemacs/declare-prefix "ol" "user log")
 
-(spacemacs/declare-prefix "ow" "current work log")
-(spacemacs/set-leader-keys "ow" (defun user/current-work-log () (interactive) (user/current-log-by-topic "hp")))
+(spacemacs/declare-prefix "olr" "current log")
+(spacemacs/set-leader-keys "olr" (defun user/current-log () (interactive) (user/current-log-by-topic "ryan")))
 
-(spacemacs/declare-prefix "oe" "earlier log")
-(spacemacs/set-leader-keys "oe" (defun user/earlier-log () (interactive) (user/next-log-by-command "earlier")))
+(spacemacs/declare-prefix "olw" "current work log")
+(spacemacs/set-leader-keys "olw" (defun user/current-work-log () (interactive) (user/current-log-by-topic "hp")))
 
-(spacemacs/declare-prefix "ol" "later log")
-(spacemacs/set-leader-keys "ol" (defun user/later-log () (interactive) (user/next-log-by-command "later")))
+(spacemacs/declare-prefix "ole" "earlier log")
+(spacemacs/set-leader-keys "ole" (defun user/earlier-log () (interactive) (user/next-log-by-command "earlier")))
 
-(spacemacs/declare-prefix "ou" "update org-agenda-files")
-(spacemacs/set-leader-keys "ou" (defun user/update-agenda-files () (interactive) (setq org-agenda-files (directory-files-recursively "~/org" ".org$"))))
+(spacemacs/declare-prefix "oll" "later log")
+(spacemacs/set-leader-keys "oll" (defun user/later-log () (interactive) (user/next-log-by-command "later")))
 #+end_src
 
 ** Configure =org= defaults
@@ -168,6 +185,8 @@ Define functions to simplify making links and backlinks.
 Set keybindings.
 
 #+begin_src emacs-lisp
+(spacemacs/declare-prefix "of" "link file")
+
 (spacemacs/declare-prefix "ofc" "clear location")
 (spacemacs/set-leader-keys "ofc" #'user/clear-file-location)
 

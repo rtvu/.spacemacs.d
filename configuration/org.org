@@ -97,7 +97,7 @@ Set keybindings.
 
 Set =org= variables.
 
-#+begin_src emacs-lisp :tangle user-config.el
+#+begin_src emacs-lisp
 (with-eval-after-load 'org
   (setq org-support-shift-select t
         org-src-preserve-indentation t

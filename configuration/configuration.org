@@ -70,14 +70,18 @@ Configure package and define keybinding.
   :init
   (setq highlight-indent-guides-method 'character
         highlight-indent-guides-character ?\¦))
+#+end_src
 
+Set keybindings.
+
+#+begin_src emacs-lisp
 (spacemacs/declare-prefix "ti" "indent guides")
 (spacemacs/set-leader-keys "ti" 'highlight-indent-guides-mode)
 #+end_src
 
 * Configure =hl-todo=
 
-Define keywords and keybinding.
+Define keywords.
 
 #+begin_src emacs-lisp
 (setq hl-todo-highlight-punctuation ":"
@@ -102,7 +106,11 @@ Define keywords and keybinding.
         ("BUG" error bold)
         ;; For warning about a problematic or misguiding code
         ("XXX" font-lock-constant-face bold)))
+#+end_src
 
+Set keybinding.
+
+#+begin_src emacs-lisp
 (spacemacs/declare-prefix "oh" "hl-todo keywords")
 (spacemacs/set-leader-keys "oh" 'hl-todo-insert)
 #+end_src

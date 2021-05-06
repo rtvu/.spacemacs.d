@@ -82,7 +82,8 @@ Set =org= variables.
 
 #+begin_src emacs-lisp :tangle user-config.el
 (with-eval-after-load 'org
-  (setq org-src-preserve-indentation t
+  (setq org-support-shift-select t
+        org-src-preserve-indentation t
         org-ellipsis " ▼ "
         org-agenda-files (directory-files-recursively "~/org" ".org$")
         org-startup-folded nil
@@ -237,4 +238,93 @@ Add hooks. Code taken from Doom Emacs.
 
   (add-hook 'org-tab-first-hook #'hacks/org-yas-expand-maybe-h)
   (add-hook 'org-tab-first-hook #'hacks/org-indent-maybe-h))
+#+end_src
+
+** Configure =user/insert-screenshot=
+
+Define function to insert screenshot. [[https://stackoverflow.com/questions/17435995/paste-an-image-on-clipboard-to-emacs-org-mode-file-without-saving-it][Reference]]
+
+Function depends on ImageMagick and xclip.
+
+#+begin_src emacs-lisp
+(defun user/insert-screenshot ()
+  "Saves screenshot from clipboard into a timestamped file in a subdirectory
+using the buffer name and inserts a link to the screenshot."
+  (interactive)
+  (let* ((xclip-targets (shell-command-to-string "xclip -selection clipboard -target TARGETS -o"))
+         (extension (cond ((string-match-p "image/png" xclip-targets) "png")
+                          ((string-match-p "image/bmp" xclip-targets) "bmp")
+                          (t "error"))))
+    (if (member extension '("bmp" "png"))
+        (let* ((image-directory (concat buffer-file-name ".d"))
+               (image-file-name (concat image-directory "/" (format-time-string "%Y-%m-%d_%H.%M.%S.png")))
+               (caption (read-string "Caption: ")))
+          (if (file-exists-p buffer-file-name)
+              (progn (unless (file-directory-p image-directory)
+                       (make-directory image-directory))
+                     (let ((return-value (shell-command (concat "xclip -selection clipboard -target image/" extension " -o | convert - " image-file-name))))
+                       (if (equal return-value 0)
+                           (let* ((image-width (string-to-number (shell-command-to-string "identify -format %w image-file-name")))
+                                  (width (if (< image-width 801) "" "800")))
+                             (insert (concat "#+caption: " caption "\n"))
+                             (insert (concat "#+attr_html: :width " width "\n"))
+                             (insert (concat "[[" image-file-name "]]\n"))
+                             (org-display-inline-images))
+                         (delete-file image-file-name)))))))))
+#+end_src
+
+Set keybinding.
+
+#+begin_src emacs-lisp
+(spacemacs/declare-prefix "os" "insert clipboard image")
+(spacemacs/set-leader-keys "os" #'user/insert-screenshot)
+#+end_src
+
+** Configure =org-html--format-image=
+
+Default org export to html to convert images to base64 format.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'ox-html
+  (setq user/original-org-html--format-image (symbol-function #'org-html--format-image))
+
+  (defun user/base64-org-html--format-image (source attributes info)
+    (let ((base64-img (shell-command-to-string (format "base64 %s" (substring source 7 nil))))
+          (extension (file-name-extension source)))
+      (org-html-close-tag
+      "img"
+      (org-html--make-attribute-string
+        (org-combine-plists
+          (list :src (format "data:image/%s;base64,%s" extension (replace-regexp-in-string "\n" "" base64-img))
+                :alt (if (string-match-p
+                            (concat "^" org-preview-latex-image-directory) source)
+                          (org-html-encode-plain-text
+                            (org-find-text-property-in-string 'org-latex-src source))
+                        (file-name-nondirectory source)))
+          attributes))
+      info)))
+
+  (defun user/set-original-org-html--format-image ()
+    "Set `org-html--format-image' to use default functionality."
+    (interactive)
+    (fset 'org-html--format-image 'user/original-org-html--format-image))
+
+  (defun user/set-base64-org-html--format-image ()
+    "Set `org-html--format-image' to format images in base64."
+    (interactive)
+    (fset 'org-html--format-image 'user/base64-org-html--format-image))
+
+  (user/set-base64-org-html--format-image))
+#+end_src
+
+Set keybindings.
+
+#+begin_src emacs-lisp
+(spacemacs/declare-prefix "oo" "org")
+
+(spacemacs/declare-prefix "ood" "default image formatting")
+(spacemacs/set-leader-keys "ood" #'user/set-original-org-html--format-image)
+
+(spacemacs/declare-prefix "oob" "base64 image formatting")
+(spacemacs/set-leader-keys "oob" #'user/set-base64-org-html--format-image)
 #+end_src

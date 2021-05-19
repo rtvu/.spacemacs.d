@@ -72,6 +72,10 @@ This function should only modify configuration layer settings."
      ;;;;; Lang ;;;;;
      emacs-lisp
      javascript
+     html
+     (elixir :variables
+             elixir-backend 'lsp
+             elixir-ls-path "~/.elixir-ls/release")
 
      ;;;;; Source-control ;;;;;
      git
@@ -104,7 +108,8 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '(highlight-indent-guides)
+   dotspacemacs-additional-packages '(highlight-indent-guides
+                                      mmm-mode)
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()

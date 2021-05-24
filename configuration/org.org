@@ -102,7 +102,9 @@ Set =org= variables.
   (setq org-support-shift-select t
         org-src-preserve-indentation t
         org-ellipsis " ▼ "
-        org-agenda-files (directory-files-recursively "~/org" ".org$")
+        org-agenda-files (if (file-directory-p "~/org")
+                             (directory-files-recursively "~/org" ".org$")
+                           ())
         org-startup-folded nil
         org-startup-indented t
         org-startup-with-inline-images nil

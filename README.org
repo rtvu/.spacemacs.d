@@ -1,0 +1,5 @@
+#+title: README
+
+* Spacemacs Dotdirectory
+
+Spacemacs dotdirectory configured to use literate configuration.
